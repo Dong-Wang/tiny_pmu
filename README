@@ -1,0 +1,11 @@
+Tiny PMU is a simple tool to access Intel Performance Monitor Unit. Unlike Intel vTune and perf,
+Tiny PMU only run in Linux kernel space and depends on msr.h.
+
+We write this tool for the Intel CPU users who still use old Linux kernel like 2.6.26 or customized
+Linux which can't run vTune and perf.
+
+Anyway, vTune and perf are the greatest performance profiling tools, you should use them as possible
+as you can.
+
+Tiny PMU has been validaed on Linux 2.6.26 and later Linux.
+
