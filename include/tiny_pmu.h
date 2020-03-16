@@ -9,10 +9,28 @@
 
 #include <asm/msr.h>
 
+/* 
+ * Different CPU support different number of general-purpose permance monitoring counter
+ * Please check how many counters your CPU support by CPUID.0Ah[15:08] for non-hyperthreading
+ * and [23:16] for hyperthreading
+ * At least, you can use 2 counters without checking CPUID.
+ */
 #define IA32_PERFEVTSEL0 0x186
 #define IA32_PERFEVTSEL1 0x187
+#define IA32_PERFEVTSEL2 0x188
+#define IA32_PERFEVTSEL3 0x189
+#define IA32_PERFEVTSEL4 0x18a
+#define IA32_PERFEVTSEL5 0x18b
+#define IA32_PERFEVTSEL6 0x18c
+#define IA32_PERFEVTSEL7 0x18d
 #define IA32_PERFCTR0 0xc1
 #define IA32_PERFCTR1 0xc2
+#define IA32_PERFCTR2 0xc3
+#define IA32_PERFCTR3 0xc4
+#define IA32_PERFCTR4 0xc5
+#define IA32_PERFCTR5 0xc6
+#define IA32_PERFCTR6 0xc7
+#define IA32_PERFCTR7 0xc8
 
 /*
  * Detailed description in <Intel 64 and IA-32 Architectures Software Developer's Manual>, Document ID 325462
