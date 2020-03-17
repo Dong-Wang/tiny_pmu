@@ -38,20 +38,20 @@ static int pmu_demo_init(void)
 
 	printk("Load PMU demo...Hello.\n");
 
-	ret_0 = set_pe_monitor_0(IA32_PERFEVT_INST_RETIRE);
-	ret_0 = set_pe_monitor_1(IA32_PERFEVT_UNHALTCORECYCLE);
-	ret_0 = read_pe_counter_0(&ins_begin_counter);
-	ret_0 = read_pe_counter_1(&cyc_begin_counter);
+	ret_0 = set_pe_monitor(0, IA32_PERFEVT_INST_RETIRE);
+	ret_0 = set_pe_monitor(1, IA32_PERFEVT_UNHALTCORECYCLE);
+	ret_0 = read_pe_counter(0, &ins_begin_counter);
+	ret_0 = read_pe_counter(1, &cyc_begin_counter);
 
-	//monitor_target_add();
+	monitor_target_add();
 	//monitor_target_nop();
-	printk("Run monitor target.\n");
+	//printk("Run monitor target.\n");
 	//asm volatile("cpuid");
 
-	ret_1 = read_pe_counter_0(&ins_end_counter);
-	ret_1 = read_pe_counter_0(&cyc_end_counter);
-	ret_1 = unset_pe_monitor_0();
-	ret_1 = unset_pe_monitor_1();
+	ret_1 = read_pe_counter(0, &ins_end_counter);
+	ret_1 = read_pe_counter(1, &cyc_end_counter);
+	ret_1 = unset_pe_monitor(0);
+	ret_1 = unset_pe_monitor(1);
 
 	printk("ret_0: %d; instruction retired: %llu; core cycles: %llu; ret_1: %d.\n",
 		ret_0, (ins_end_counter - ins_begin_counter), (cyc_end_counter - cyc_begin_counter), ret_1);
