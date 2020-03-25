@@ -2,7 +2,6 @@
 #ifndef __PMU_INFO_H__
 #define __PMU_INFO_H__
 
-#include <cpuid.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -32,6 +31,11 @@
 
 #define CPUID_TRANS_U32_TO_U8(val, mask, shift) \
         ((uint8_t)(((val) & (mask)) >> (shift)))
+
+#define __cpuid(in_eax, out_eax, out_ebx, out_ecx, out_edx)                     \
+  __asm__ ("cpuid\n\t"                                  \
+           : "=a" (out_eax), "=b" (out_ebx), "=c" (out_ecx), "=d" (out_edx)     \
+           : "0" (in_eax))
 
 struct ia_pmu_info {
         uint8_t version;
