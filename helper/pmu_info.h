@@ -37,6 +37,14 @@
            : "=a" (out_eax), "=b" (out_ebx), "=c" (out_ecx), "=d" (out_edx)     \
            : "0" (in_eax))
 
+#ifdef __KERNEL__
+#define PMU_PRINT(fmt, args...) \
+	printk(KERN_INFO fmt, ##args)
+#else
+#define PMU_PRINT(fmt, args...) \
+	printf(fmt, ##args)
+#endif
+
 struct ia_pmu_info {
         uint8_t version;
         uint8_t gpmc_num;
@@ -60,7 +68,7 @@ static inline void get_pmu_info(struct ia_pmu_info *pmu_info)
 
 static inline void print_pmu_info(struct ia_pmu_info *pmu_info)
 {
-        printf("PMU Version: %d\n"
+        PMU_PRINT("PMU Version: %d\n"
                "Gerneral Purpose Performance Monitoring Coutner\n"
 	       "  number: %d\n"
 	       "  counter width: %d\n"
