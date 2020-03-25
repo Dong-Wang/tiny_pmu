@@ -2,10 +2,10 @@
 
 int main(int argc, char *argv[])
 {
-        struct ia_pmu_info pmu_info;
+	struct ia_pmu_info pmu_info;
 
-        get_pmu_info(&pmu_info);
-        print_pmu_info(&pmu_info);
-        return 0;
+	get_pmu_info(&pmu_info);
+	print_pmu_info(&pmu_info);
+	return 0;
 }
 
