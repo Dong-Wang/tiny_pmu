@@ -38,10 +38,11 @@ static int pmu_demo_init(void)
 
 	printk("Load PMU demo...Hello.\n");
 
-	set_pe_monitor(0, IA32_PERFEVT_TOPDOWN_SLOTS);
-	set_pe_monitor(1, IA32_PERFEVT_TOPDOWN_SLOTS);
-	set_pe_monitor(2, IA32_PERFEVT_TOPDOWN_SLOTS);
-	
+	ret_0 = set_pe_monitor(0, IA32_PERFEVT_INST_RETIRE);
+	ret_0 = set_pe_monitor(1, IA32_PERFEVT_UNHALTCORECYCLE);
+	ret_0 = read_pe_counter(0, &ins_begin_counter);
+	ret_0 = read_pe_counter(1, &cyc_begin_counter);
+
 	monitor_target_add();
 	//monitor_target_nop();
 	//printk("Run monitor target.\n");
