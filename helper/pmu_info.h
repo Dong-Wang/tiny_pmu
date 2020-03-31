@@ -2,8 +2,13 @@
 #ifndef __PMU_INFO_H__
 #define __PMU_INFO_H__
 
-#include <stdint.h>
-#include <stdio.h>
+/*
+ * Must include below headers before pmu_info.h in user space application.
+ *   #include <stdint.h>
+ *   #include <stdio.h>
+ * Must include below headers before pmu_info.h in kernel module.
+ *   #include <linux/kernel.h>
+ */
 
 /*
  * What information are needed for Tiny PMU?
@@ -38,10 +43,10 @@
 
 #ifdef __KERNEL__
 #define PMU_PRINT(fmt, args...) \
-	printk(KERN_INFO fmt, ##args)
+	printk(KERN_INFO fmt"\n", ##args)
 #else
 #define PMU_PRINT(fmt, args...) \
-	printf(fmt, ##args)
+	printf(fmt"\n", ##args)
 #endif
 
 struct ia_pmu_info {
@@ -67,18 +72,13 @@ static inline void get_pmu_info(struct ia_pmu_info *pmu_info)
 
 static inline void print_pmu_info(struct ia_pmu_info *pmu_info)
 {
-	PMU_PRINT("PMU Version: %d\n"
-			"Gerneral Purpose Performance Monitoring Coutner\n"
-			"  number: %d\n"
-			"  counter width: %d\n"
-			"Fixed Function Perfromance Monitoring Counter\n"
-			"  number: %d\n"
-			"  counter width: %d\n",
-			pmu_info->version,
-			pmu_info->gpmc_num,
-			pmu_info->gpmc_width,
-			pmu_info->fpc_num,
-			pmu_info->fpc_width);
+	PMU_PRINT("PMU Version: %d", pmu_info->version);
+	PMU_PRINT("Gerneral Purpose Performance Monitoring Coutner");
+	PMU_PRINT("  number: %d", pmu_info->gpmc_num);
+	PMU_PRINT("  counter width: %d", pmu_info->gpmc_width);
+	PMU_PRINT("Fixed Function Perfromance Monitoring Counter");
+	PMU_PRINT("  number: %d", pmu_info->fpc_num);
+	PMU_PRINT("  counter width: %d", pmu_info->fpc_width);
 }
 
 #endif

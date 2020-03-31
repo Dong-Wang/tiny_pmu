@@ -1,3 +1,7 @@
+
+#include <stdint.h>
+#include <stdio.h>
+
 #include "pmu_info.h"
 
 int main(int argc, char *argv[])

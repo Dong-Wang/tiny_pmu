@@ -1,14 +1,30 @@
 
-APP=pmu_info
-CC=gcc
-CFLAGS=-g -Wall
+# usage:
+# user space application: make / make clean
+# kernel module: make kmod / make kmod_clean
 
+TARGET = pmu_info
 
-all:$(APP)
+# user applicaiton
+U := gcc -g -Wall
 
-$(APP):pmu_info.c
-	$(CC) $(CFLAGS) $^ -o $@
+all:${TARGET}
+
+${TARGET}:pmu_info.c
+	${U} $^ -o $@
 
 clean:
-	@rm -f $(APP)
+	@rm -f ${TARGET}
 
+# kernel module
+KDIR = /lib/modules/`uname -r`/build
+M := make -C ${KDIR}  M=`pwd`
+
+obj-m := ${TARGET}.o
+${TARGET}-y := pmu_info_kmod.o
+
+kmod:
+	${M} modules
+
+kmod_clean:
+	${M} clean
