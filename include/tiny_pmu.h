@@ -58,28 +58,28 @@
 /*
  * Skylake Server Performance Event list
  */
-#define IA32_PERFEVT_CPU_CLK_UNHALTED_THREAD 0x0053003c  /* clock */
-#define IA32_PERFEVT_INT_MISC_RECOVERY_CYCLES 0x0053010d  /* recovery cycles */
-#define IA32_PERFEVT_UOPS_ISSUED_ANY 0x0053010e  /* slots issue */
-#define IA32_PERFEVT_UOPS_RETIRED_RETIRED_SLOTS 0x005302c2  /* slots retired */
-#define IA32_PERFEVT_IDQ_UOPS_0_NOT_DELIVERED_CORE 0x0453019c /* fetch bubbles */
-#define IA32_PERFEVT_IDQ_UOPS_LE3_NOT_DELIVERED_CORE 0x0353019c  /* fetch bubbles */
-#define IA32_PERFEVT_ISSUE_SLOTS_NOT_CONSUMED_RECOVERY 0x005302ca  /* recovery bubbles */
-#define IA32_PERFEVT_BR_MISP_RETIRED_ALL_BRANCHES 0x005301c5  /* branch miss prediction retired */
-#define IA32_PERFEVT_MACHINE_CLEARS_COUNT 0x005301c3  /* machine clear count */
-#define IA32_PERFEVT_IDQ_MS_UOPS 0x00533079  /* total microcode sequencer deliver uops */
-#define IA32_PERFEVT_UOPS_ISSUED_ANY 0x0053010e  /* uops from RAT to RS */
-#define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_TOTAL 0x005304a3	/* total execution stalls */
-#define IA32_PERFEVT_RS_EVENTS_EMPTY_CYCLES 0x0053015e	/* cycles when RS is empty */
-#define IA32_PERFEVT_UOPS_EXECUTED_CYCLES_GE_1_UOP_EXEC 0x015301b1	/* cycles at least 1 uops execute */
-#define IA32_PERFEVT_UOPS_EXECUTED_CYCLES_GE_2_UOP_EXEC 0x025301b1	/* cycles at least 2 uops execute */
-#define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_MEM_ANY 0x065306a3	/* stall due to memory load */
-#define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_L1D_MISS 0x0c530ca3	/* stall due to memory load when L1 miss */
-#define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_L2_MISS 0x055305a3	/* stall due to memory load when L2 miss */
-#define IA32_PERFEVT_MEM_LOAD_UOPS_RETIRED_LLC_HIT 0x005304d1	/* retired uops for LLC hit */
-#define IA32_PERFEVT_MEM_LOAD_UOPS_RETIRED_LLC_MISS 0x005320d1	/* retired uops for LLC miss */
-#define IA32_PERFEVT_RESOURCE_STALLS_SB 0x005308a2	/* stall due to store buffer full */
-#define IA32_PERFEVT_UNC_ARB_TRK_OCCUPANCY_ALL 0x00530180	/* cycles waiting for memory controller */
+#define IA32_PERFEVT_CPU_CLK_UNHALTED_THREAD 			    0x0053003c  /* clock */
+#define IA32_PERFEVT_INT_MISC_RECOVERY_CYCLES               0x0053010d  /* recovery cycles */
+#define IA32_PERFEVT_UOPS_ISSUED_ANY                        0x0053010e  /* slots issue */
+#define IA32_PERFEVT_UOPS_RETIRED_RETIRED_SLOTS             0x005302c2  /* slots retired */
+#define IA32_PERFEVT_IDQ_UOPS_0_NOT_DELIVERED_CORE          0x0453019c  /* fetch bubbles */
+#define IA32_PERFEVT_IDQ_UOPS_LE3_NOT_DELIVERED_CORE        0x0353019c  /* fetch bubbles */
+#define IA32_PERFEVT_ISSUE_SLOTS_NOT_CONSUMED_RECOVERY      0x005302ca  /* recovery bubbles */
+#define IA32_PERFEVT_BR_MISP_RETIRED_ALL_BRANCHES           0x005301c5  /* branch miss prediction retired */
+#define IA32_PERFEVT_MACHINE_CLEARS_COUNT                   0x005301c3  /* machine clear count */
+#define IA32_PERFEVT_IDQ_MS_UOPS                            0x00533079  /* total microcode sequencer deliver uops */
+#define IA32_PERFEVT_UOPS_ISSUED_ANY                        0x0053010e  /* uops from RAT to RS */
+#define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_TOTAL            0x005304a3  /* total execution stalls */
+#define IA32_PERFEVT_RS_EVENTS_EMPTY_CYCLES                 0x0053015e  /* cycles when RS is empty */
+#define IA32_PERFEVT_UOPS_EXECUTED_CYCLES_GE_1_UOP_EXEC     0x015301b1  /* cycles at least 1 uops execute */
+#define IA32_PERFEVT_UOPS_EXECUTED_CYCLES_GE_2_UOP_EXEC     0x025301b1  /* cycles at least 2 uops execute */
+#define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_MEM_ANY          0x065306a3  /* stall due to memory load */
+#define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_L1D_MISS         0x0c530ca3  /* stall due to memory load when L1 miss */
+#define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_L2_MISS          0x055305a3  /* stall due to memory load when L2 miss */
+#define IA32_PERFEVT_MEM_LOAD_UOPS_RETIRED_LLC_HIT          0x005304d1  /* retired uops for LLC hit */
+#define IA32_PERFEVT_MEM_LOAD_UOPS_RETIRED_LLC_MISS         0x005320d1  /* retired uops for LLC miss */
+#define IA32_PERFEVT_RESOURCE_STALLS_SB                     0x005308a2  /* stall due to store buffer full */
+#define IA32_PERFEVT_UNC_ARB_TRK_OCCUPANCY_ALL              0x00530180  /* cycles waiting for memory controller */
 
 /*
  * Setup performance event to GPMC
