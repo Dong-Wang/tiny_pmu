@@ -37,18 +37,27 @@
 #define IA32_PERFCTR7 0xc8
 
 /*
+ * Performance Counter width
+ */
+#define IA32_PERFCTR_WIDTH          48    /* General Purpose Counter,Skylake Server */
+#define IA32_PERFCTR_MAX_VALUE      ((1ULL<<IA32_PERFCTR_WIDTH)-1)
+
+/*
  * Detailed description in <Intel 64 and IA-32 Architectures Software Developer's Manual>, Document ID 325462
  * 18.2.1.2 Pre-defined Architectural Performance Events
  */
-#define IA32_PERFEVT_UNHALTCORECYCLE	0x0053003c  /* UnHalted Core Cycles */
-#define IA32_PERFEVT_INST_RETIRE 	0x005300c0  /* Instructions Retired*/
-#define IA32_PERFEVT_UNHALTREFCYCLE	0x0053013c  /* UnHalted Reference Cycles */
-#define IA32_PERFEVT_LLC_REF     	0x00534f2e  /* LLC Reference */
-#define IA32_PERFEVT_LLC_MISS    	0x0053412e  /* LLC Misses */
-#define IA32_PERFEVT_BRANCH_HITS 	0x005300c4  /* Branch Instruction Retired */
-#define IA32_PERFEVT_BRANCH_MISS 	0x005300c5  /* Branch Misses Retired */
-#define IA32_PERFEVT_TOPDOWN_SLOTS 	0x005301a4  /* Topdown Slots */
+#define IA32_PERFEVT_UNHALTCORECYCLE    0x0053003c  /* UnHalted Core Cycles */
+#define IA32_PERFEVT_INST_RETIRE        0x005300c0  /* Instructions Retired*/
+#define IA32_PERFEVT_UNHALTREFCYCLE     0x0053013c  /* UnHalted Reference Cycles */
+#define IA32_PERFEVT_LLC_REF            0x00534f2e  /* LLC Reference */
+#define IA32_PERFEVT_LLC_MISS           0x0053412e  /* LLC Misses */
+#define IA32_PERFEVT_BRANCH_HITS        0x005300c4  /* Branch Instruction Retired */
+#define IA32_PERFEVT_BRANCH_MISS        0x005300c5  /* Branch Misses Retired */
+#define IA32_PERFEVT_TOPDOWN_SLOTS      0x005301a4  /* Topdown Slots */
 
+/*
+ * Skylake Server Performance Event list
+ */
 #define IA32_PERFEVT_CPU_CLK_UNHALTED_THREAD 0x0053003c  /* clock */
 #define IA32_PERFEVT_INT_MISC_RECOVERY_CYCLES 0x0053010d  /* recovery cycles */
 #define IA32_PERFEVT_UOPS_ISSUED_ANY 0x0053010e  /* slots issue */
@@ -99,5 +108,11 @@
 	rdmsrl_safe((IA32_PERFCTR##index), (value))
 
 #define distance(x,y) ((y)>=(x)?(y - x):(0xffffffffffff - x + y))
+
+/*
+ * Calculat event number
+ */
+#define counter_delta(begin, end) \
+	((end)>=(begin)? ((end)-(begin)) : (IA32_PERFCTR_MAX_VALUE+(end)-(begin)))
 
 #endif

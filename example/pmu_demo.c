@@ -53,8 +53,8 @@ static int pmu_demo_init(void)
 	ret_1 = unset_pe_monitor(0);
 	ret_1 = unset_pe_monitor(1);
 
-	printk("ret_0: %d; instruction retired: %llu; core cycles: %llu; ret_1: %d.\n",
-		ret_0, (ins_end_counter - ins_begin_counter), (cyc_end_counter - cyc_begin_counter), ret_1);
+	printk(KERN_INFO"ret_0: %d; ret_1: %d; instruction retired: %llu; core cycles: %llu.\n",
+		ret_0, ret_1, counter_delta(ins_begin_counter, ins_end_counter), counter_delta(cyc_begin_counter, cyc_end_counter));
 
 	return 0;
 }
