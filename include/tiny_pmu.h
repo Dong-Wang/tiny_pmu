@@ -115,4 +115,14 @@
 #define counter_delta(begin, end) \
 	((end)>=(begin)? ((end)-(begin)) : (IA32_PERFCTR_MAX_VALUE+(end)-(begin)))
 
+/*
+ * TMAM (Top-down Microarchitecture Anlysis Method) Metrics Formula List
+ * NOTICE!!!!  To avoid float computing in kernel space, numerator mulitply by TMAM_MATRIC_RESOLUTION.
+ */
+#define TMAM_MATRIC_RESOLUTION    100
+
+/* CPI */
+#define tmam_cpi(CPU_CLK_UNHALTED_THREAD, INST_RETIRED_ANY) \
+	((CPU_CLK_UNHALTED_THREAD)*TMAM_MATRIC_RESOLUTION / (INST_RETIRED_ANY))
+
 #endif
