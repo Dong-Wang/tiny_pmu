@@ -9,3 +9,5 @@ as you can.
 
 Tiny PMU has been validaed on Linux 2.6.26 and later Linux.
 
+Tiny PMU only support Skylake
+
