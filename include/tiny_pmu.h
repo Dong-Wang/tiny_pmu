@@ -6,24 +6,6 @@
 
 #include <asm/msr.h>
 
-/*
- * Performance Counter width
- * Skylake Server
- */
-#define TMAM_GENERAL_COUNTER_WIDTH          48    
-#define TMAM_GENERAL_COUNTER_MAX_VALUE      ((1ULL<<TMAM_GENERAL_COUNTER_WIDTH)-1)
-
-/*
- * TMAM (Top-down Microarchitecture Anlysis Method) Metrics Formula List
- * NOTICE!!!!  To avoid float computing in kernel space, numerator mulitply by TMAM_MATRIC_RESOLUTION.
- */
-#define TMAM_MATRIC_RESOLUTION 100
-
-/*
- * Threads per core, usually 1 or 2
- */
-#define TMAM_MATRIC_THREADS 1
-
 /* 
  * Different CPU support different number of general-purpose performance monitoring counter (GPMC)
  * Please check how many counters your CPU support by CPUID.0AH:EAX[15:08] for non-hyperthreading
@@ -53,6 +35,13 @@
 #define IA32_PERFCTR5 0xc6
 #define IA32_PERFCTR6 0xc7
 #define IA32_PERFCTR7 0xc8
+
+/*
+ * Performance General Counter width
+ * Skylake Server
+ */
+#define IA32_PERFCTR_WIDTH          48    
+#define IA32_PERFCTR_MAX_VALUE      ((1ULL<<IA32_PERFCTR_WIDTH)-1)
 
 /*
  * Detailed description in <Intel 64 and IA-32 Architectures Software Developer's Manual>, Document ID 325462
@@ -128,7 +117,18 @@
  * Calculat event number
  */
 #define counter_delta(begin, end) \
-	((end)>=(begin)? ((end)-(begin)) : (TMAM_GENERAL_COUNTER_MAX_VALUE + (end) - (begin) + 1))
+	((end)>=(begin)? ((end)-(begin)) : (IA32_PERFCTR_MAX_VALUE + (end) - (begin) + 1))
+
+/*
+ * TMAM (Top-down Microarchitecture Anlysis Method) Metrics Formula List
+ * NOTICE!!!!  To avoid float computing in kernel space, numerator mulitply by TMAM_MATRIC_RESOLUTION.
+ */
+#define TMAM_MATRIC_RESOLUTION 100
+
+/*
+ * Threads per core, usually 1 or 2
+ */
+#define TMAM_MATRIC_THREADS 1
 
 /* CPI */
 #define tmam_cpi(CPU_CLK_UNHALTED_THREAD, INST_RETIRED_ANY) \
