@@ -63,6 +63,14 @@ static int top_down_demo_init(void)
 	u64 recovery_bubbles_begin;
 	u64 recovery_bubbles_end;
 
+	u64 fetch_bubbles_MIW;
+	u64 fetch_bubbles_MIW_begin;
+	u64 fetch_bubbles_MIW_end;
+
+	u64 ms_uops;
+	u64 ms_uops_begin;
+	u64 ms_uops_end;
+
 	//base event, which not directly get from pmu
 	u64 total_slots;
 
@@ -71,6 +79,12 @@ static int top_down_demo_init(void)
 	u64 bad_speculation;
 	u64 retiring;
 	u64 bankend_bound;
+
+	//level 2 bound
+	u64 fetch_latency_bound;
+	u64 fetch_bandwidth_bound;
+	u64 micro_sequencer;
+	u64 base;
 
 	printk("Load Top Down demo.\n");
 	printk("Begin using top-down event to analyze demo program.\n");
@@ -105,14 +119,30 @@ static int top_down_demo_init(void)
 	read_pe_counter(0, &fetch_bubbles_end);
 	fetch_bubbles = counter_delta(fetch_bubbles_begin, fetch_bubbles_end);
 
-	//get fetch_bubbles_MIW
-	set_pe_monitor(2, IA32_PERFEVT_INT_MISC_RECOVERY_CYCLES);
-	read_pe_counter(2, &recovery_bubbles_begin);
+	//get recovery_bubbles
+	set_pe_monitor(1, IA32_PERFEVT_INT_MISC_RECOVERY_CYCLES);
+	read_pe_counter(1, &recovery_bubbles_begin);
 	program_logic();
-	unset_pe_monitor(2);
-	read_pe_counter(2, &recovery_bubbles_end);
+	unset_pe_monitor(1);
+	read_pe_counter(1, &recovery_bubbles_end);
 	recovery_bubbles = counter_delta(recovery_bubbles_begin,recovery_bubbles_end);
 	total_slots = clock * 4;
+
+	//get fetch_bubbles_MIW
+	set_pe_monitor(2, IA32_PERFEVT_IDQ_UOPS_0_NOT_DELIVERED_CORE);
+	read_pe_counter(2, &fetch_bubbles_MIW_begin);
+	program_logic();
+	unset_pe_monitor(2);
+	read_pe_counter(2, &fetch_bubbles_MIW_end);
+	fetch_bubbles_MIW = counter_delta(fetch_bubbles_MIW_begin, fetch_bubbles_MIW_end);
+
+	//get ms_uops
+	set_pe_monitor(3, IA32_PERFEVT_IDQ_MS_UOPS);
+	read_pe_counter(3, &ms_uops_begin);
+	program_logic();
+	unset_pe_monitor(3);
+	read_pe_counter(3, &ms_uops_end);
+	ms_uops = counter_delta(ms_uops_begin, ms_uops_end);
 
 	//calculate category level 1
 	frontend_bound=	TMAM_MATRIC_RESOLUTION * TMAM_MATRIC_THREADS * fetch_bubbles / total_slots;
@@ -120,8 +150,17 @@ static int top_down_demo_init(void)
 	retiring = TMAM_MATRIC_RESOLUTION * slots_retired / (total_slots / TMAM_MATRIC_THREADS);
 	bankend_bound = TMAM_MATRIC_RESOLUTION-(frontend_bound + bad_speculation + retiring);
 
-	//display result in dmesg
+	//calculate category level 2
+	fetch_latency_bound = TMAM_MATRIC_RESOLUTION * fetch_bubbles_MIW / total_slots;
+	fetch_bandwidth_bound = frontend_bound - fetch_latency_bound;
+	micro_sequencer = TMAM_MATRIC_RESOLUTION * ms_uops / total_slots;
+	base = retiring - micro_sequencer;
+
+	//display level 1 result in dmesg
 	printk("frontend_bound=%lld,bad_speculation=%lld,retiring=%lld,bankend_bound=%lld\n",frontend_bound,bad_speculation,retiring,bankend_bound);
+
+	//display level 2 result in dmesg
+	printk("fetch_latency_bound=%lld,fetch_bandwidth_bound=%lld,micro_sequencer=%lld,base=%lld\n",fetch_latency_bound,fetch_bandwidth_bound,micro_sequencer,base);
 	return 0;
 }
 
