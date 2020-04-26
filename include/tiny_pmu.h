@@ -130,12 +130,80 @@
  */
 #define TMAM_MATRIC_THREADS 1
 
+#define ceiling(value) ()
 /* CPI */
 #define tmam_cpi(CPU_CLK_UNHALTED_THREAD, INST_RETIRED_ANY) \
 	((CPU_CLK_UNHALTED_THREAD)*TMAM_MATRIC_RESOLUTION / (INST_RETIRED_ANY))
 
 /*
- * formula for memory bound and core bound
+ * formula for frontend_bound
+ * a:IA32_PERFEVT_IDQ_UOPS_LE3_NOT_DELIVERED_CORE
+ * b:IA32_PERFEVT_CPU_CLK_UNHALTED_THREAD
+ */
+#define tmam_frontend_bound(a,b) \
+	(TMAM_MATRIC_RESOLUTION * TMAM_MATRIC_THREADS * a / b / 4)
+
+/*
+ * formula for bad_speculation
+ * a:UOPS_ISSUED.ANY
+ * b:UOPS_RETIRED.RETIRE_SLOTS
+ * c:INT_MISC.RECOVERY_CYCLES_ANY
+ * d:CPU_CLK_UNHALTED.THREAD
+ */
+#define tmam_bad_speculation(a,b,c,d) \
+	(TMAM_MATRIC_RESOLUTION * (a-b + (4 * c)/TMAM_MATRIC_THREADS) / (d * 4/ TMAM_MATRIC_THREADS))
+
+/*
+ * formula for retiring
+ * a:UOPS_RETIRED.RETIRE_SLOTS
+ * b:CPU_CLK_UNHALTED.THREAD
+ */
+#define tmam_retiring(a,b) \
+	(TMAM_MATRIC_RESOLUTION * a / (b * 4 / TMAM_MATRIC_THREADS))
+
+/*
+ * formula for backend_bound
+ * a:frondend_bound
+ * b:bad_speculation
+ * c:retiring
+ */
+#define tmam_backend_bound(a,b,c) \
+	(TMAM_MATRIC_RESOLUTION-(a + b + c))
+
+/*
+ * formula for retiring
+ * a:UOPS_RETIRED.RETIRE_SLOTS
+ * b:IDQ_UOPS_NOT_DELIVERED.CORE
+ */
+#define tmam_fetch_latency_bound(a,b) \
+	(TMAM_MATRIC_RESOLUTION * a / b / 4)
+
+/*
+ * formula for fetch_bandwidth_bound
+ * a:frondend_bound
+ * b:tmam_fetch_latency_bound
+ */
+#define tmam_fetch_bandwidth_bound(a,b) \
+	(a - b)
+
+/*
+ * formula for micro_sequencer
+ * a:IDQ.MS_CYCLES
+ * b:CPU_CLK_UNHALTED.THREAD
+ */
+#define tmam_micro_sequencer(a,b) \
+	(TMAM_MATRIC_RESOLUTION * a / b / 4)
+
+/*
+ * formula for micro_sequencer
+ * a:retiring
+ * b:micro_sequencer
+ */
+#define tmam_base(a,b) \
+	(a - b)
+	
+/*
+ * formula for memory bound
  * a:IDQ_UOPS_NOT_DELIVERED.CORE
  * b:UOPS_ISSUED.ANY
  * c:INT_MISC.RECOVERY_CYCLES_ANY
@@ -153,7 +221,7 @@
 	(TMAM_MATRIC_RESOLUTION - TMAM_MATRIC_RESOLUTION*((b-e+4*(c/TMAM_MATRIC_THREADS)+a+e)/(4*d/TMAM_MATRIC_THREADS)))*(f+g)/(m+j+(((TMAM_MATRIC_RESOLUTION*q/p)>18*TMAM_MATRIC_RESOLUTION/10)?k:0)+f+g)
 
 /*
- * formula for memory bound and core bound
+ * formula for core bound
  * a:IDQ_UOPS_NOT_DELIVERED.CORE
  * b:UOPS_ISSUED.ANY
  * c:INT_MISC.RECOVERY_CYCLES_ANY
@@ -169,6 +237,5 @@
  */
 #define tmam_core_bound(a,b,c,d,e,f,g,j,k,m,p,q) \
 	(TMAM_MATRIC_RESOLUTION-(TMAM_MATRIC_RESOLUTION*(b-e+4*(c/TMAM_MATRIC_THREADS)+a+e)/(4*d/TMAM_MATRIC_THREADS)))*(TMAM_MATRIC_RESOLUTION-(TMAM_MATRIC_RESOLUTION*(f+g)/(m+j+(((TMAM_MATRIC_RESOLUTION*q/p)>18*TMAM_MATRIC_RESOLUTION/10)?k:0)+f+g)))/TMAM_MATRIC_RESOLUTION
-
 
 #endif

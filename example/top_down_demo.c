@@ -71,9 +71,6 @@ static int top_down_demo_init(void)
 	u64 ms_uops_begin;
 	u64 ms_uops_end;
 
-	//base event, which not directly get from pmu
-	u64 total_slots;
-
 	//level 1 bound
 	u64 frontend_bound;
 	u64 bad_speculation;
@@ -126,7 +123,6 @@ static int top_down_demo_init(void)
 	unset_pe_monitor(1);
 	read_pe_counter(1, &recovery_bubbles_end);
 	recovery_bubbles = counter_delta(recovery_bubbles_begin,recovery_bubbles_end);
-	total_slots = clock * 4;
 
 	//get fetch_bubbles_MIW
 	set_pe_monitor(2, IA32_PERFEVT_IDQ_UOPS_0_NOT_DELIVERED_CORE);
@@ -145,16 +141,16 @@ static int top_down_demo_init(void)
 	ms_uops = counter_delta(ms_uops_begin, ms_uops_end);
 
 	//calculate category level 1
-	frontend_bound=	TMAM_MATRIC_RESOLUTION * TMAM_MATRIC_THREADS * fetch_bubbles / total_slots;
-	bad_speculation = TMAM_MATRIC_RESOLUTION * (slots_issued-slots_retired + (4 * recovery_bubbles)/TMAM_MATRIC_THREADS) / (total_slots / TMAM_MATRIC_THREADS);
-	retiring = TMAM_MATRIC_RESOLUTION * slots_retired / (total_slots / TMAM_MATRIC_THREADS);
-	bankend_bound = TMAM_MATRIC_RESOLUTION-(frontend_bound + bad_speculation + retiring);
+	frontend_bound = tmam_frontend_bound(fetch_bubbles,clock);
+	bad_speculation = tmam_bad_speculation(slots_issued,slots_retired,recovery_bubbles,clock);
+	retiring = tmam_retiring(slots_retired,clock);
+	bankend_bound = tmam_backend_bound(frontend_bound,bad_speculation,retiring);
 
 	//calculate category level 2
-	fetch_latency_bound = TMAM_MATRIC_RESOLUTION * fetch_bubbles_MIW / total_slots;
-	fetch_bandwidth_bound = frontend_bound - fetch_latency_bound;
-	micro_sequencer = TMAM_MATRIC_RESOLUTION * ms_uops / total_slots;
-	base = retiring - micro_sequencer;
+	fetch_latency_bound = tmam_fetch_latency_bound(fetch_bubbles_MIW,clock);
+	fetch_bandwidth_bound = tmam_fetch_bandwidth_bound(frontend_bound,fetch_latency_bound);
+	micro_sequencer = tmam_micro_sequencer(ms_uops,clock);
+	base = tmam_base(retiring,micro_sequencer);
 
 	//display level 1 result in dmesg
 	printk("frontend_bound=%lld,bad_speculation=%lld,retiring=%lld,bankend_bound=%lld\n",frontend_bound,bad_speculation,retiring,bankend_bound);
