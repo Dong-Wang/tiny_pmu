@@ -43,45 +43,45 @@ static void program_logic(void){
 static int top_down_demo_init(void)
 {
 	//directly get from PMU register
-	u64 clock;
+	long clock;
 	u64 clock_begin;
 	u64 clock_end;
 
-	u64 slots_issued;
+	long slots_issued;
 	u64 slots_issued_begin;
 	u64 slots_issued_end;
 
-	u64 slots_retired;
+	long slots_retired;
 	u64 slots_retired_begin;
 	u64 slots_retired_end;
 
-	u64 fetch_bubbles;
+	long fetch_bubbles;
 	u64 fetch_bubbles_begin;
 	u64 fetch_bubbles_end;
 
-	u64 recovery_bubbles;
+	long recovery_bubbles;
 	u64 recovery_bubbles_begin;
 	u64 recovery_bubbles_end;
 
-	u64 fetch_bubbles_MIW;
+	long fetch_bubbles_MIW;
 	u64 fetch_bubbles_MIW_begin;
 	u64 fetch_bubbles_MIW_end;
 
-	u64 ms_uops;
+	long ms_uops;
 	u64 ms_uops_begin;
 	u64 ms_uops_end;
 
 	//level 1 bound
-	u64 frontend_bound;
-	u64 bad_speculation;
-	u64 retiring;
-	u64 bankend_bound;
+	long frontend_bound;
+	long bad_speculation;
+	long retiring;
+	long bankend_bound;
 
 	//level 2 bound
-	u64 fetch_latency_bound;
-	u64 fetch_bandwidth_bound;
-	u64 micro_sequencer;
-	u64 base;
+	long fetch_latency_bound;
+	long fetch_bandwidth_bound;
+	long micro_sequencer;
+	long base;
 
 	printk("Load Top Down demo.\n");
 	printk("Begin using top-down event to analyze demo program.\n");
@@ -153,10 +153,10 @@ static int top_down_demo_init(void)
 	base = tmam_base(retiring,micro_sequencer);
 
 	//display level 1 result in dmesg
-	printk("frontend_bound=%lld,bad_speculation=%lld,retiring=%lld,bankend_bound=%lld\n",frontend_bound,bad_speculation,retiring,bankend_bound);
+	printk("frontend_bound=%ld,bad_speculation=%ld,retiring=%ld,bankend_bound=%ld\n",frontend_bound,bad_speculation,retiring,bankend_bound);
 
 	//display level 2 result in dmesg
-	printk("fetch_latency_bound=%lld,fetch_bandwidth_bound=%lld,micro_sequencer=%lld,base=%lld\n",fetch_latency_bound,fetch_bandwidth_bound,micro_sequencer,base);
+	printk("fetch_latency_bound=%ld,fetch_bandwidth_bound=%ld,micro_sequencer=%ld,base=%ld\n",fetch_latency_bound,fetch_bandwidth_bound,micro_sequencer,base);
 	return 0;
 }
 

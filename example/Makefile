@@ -4,7 +4,7 @@ KDIR = /lib/modules/`uname -r`/build
 M := make -C ${KDIR}  M=`pwd`
 
 obj-m := pmu_demo.o \
-		top-down-demo.o
+		top_down_demo.o
 
 all:
 	${M} modules
