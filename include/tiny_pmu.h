@@ -74,7 +74,7 @@
 #define IA32_PERFEVT_RS_EVENTS_EMPTY_CYCLES                 0x0043015e  /* cycles when RS is empty */
 #define IA32_PERFEVT_UOPS_EXECUTED_CYCLES_GE_1_UOP_EXEC     0x014301b1  /* cycles at least 1 uops execute */
 #define IA32_PERFEVT_UOPS_EXECUTED_CYCLES_GE_2_UOP_EXEC     0x024301b1  /* cycles at least 2 uops execute */
-#define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_MEM_ANY          0x064306a3  /* stall due to memory load */
+#define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_MEM_ANY          0x064314a3  /* stall due to memory load */
 #define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_L1D_MISS         0x0c430ca3  /* stall due to memory load when L1 miss */
 #define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_L2_MISS          0x054305a3  /* stall due to memory load when L2 miss */
 #define IA32_PERFEVT_MEM_LOAD_UOPS_RETIRED_LLC_HIT          0x004304d1  /* retired uops for LLC hit */
@@ -241,5 +241,23 @@
  */
 #define tmam_core_bound(a,b,c,d,e,f,g,j,k,m,p,q) \
 	limit((TMAM_MATRIC_RESOLUTION-(TMAM_MATRIC_RESOLUTION*(b-e+4*(c/TMAM_MATRIC_THREADS)+a+e)/(4*d/TMAM_MATRIC_THREADS)))*(TMAM_MATRIC_RESOLUTION-(TMAM_MATRIC_RESOLUTION*(f+g)/(m+j+(((TMAM_MATRIC_RESOLUTION*q/p)>18*TMAM_MATRIC_RESOLUTION/10)?k:0)+f+g)))/TMAM_MATRIC_RESOLUTION)
+
+/*
+ * formula for l1_bound
+ * a:CYCLE_ACTIVITY.STALLS_MEM_ANY
+ * b:CYCLE_ACTIVITY.STALLS_L1D_MISS
+ * c:CPU_CLK_UNHALTED.THREAD
+ */
+#define tmam_l1_bound(a,b,c) \
+	limit(TMAM_MATRIC_RESOLUTION * (a - b) / c)
+
+/*
+ * formula for l2_bound
+ * a:CYCLE_ACTIVITY.STALLS_L1D_MISS
+ * b:CYCLE_ACTIVITY.STALLS_L2_MISS
+ * c:CPU_CLK_UNHALTED.THREAD
+ */
+#define tmam_l2_bound(a,b,c) \
+	limit(TMAM_MATRIC_RESOLUTION * (a - b) / c)
 
 #endif

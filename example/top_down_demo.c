@@ -71,17 +71,33 @@ static int top_down_demo_init(void)
 	u64 ms_uops_begin;
 	u64 ms_uops_end;
 
-	//level 1 bound
+	u64 memstall_anyload;
+	u64 memstall_anyload_begin;
+	u64 memstall_anyload_end;
+
+	u64 memstall_l1miss;
+	u64 memstall_l1miss_begin;
+	u64 memstall_l1miss_end;
+
+	u64 memstall_l2miss;
+	u64 memstall_l2miss_begin;
+	u64 memstall_l2miss_end;
+
+	//level 1 bound, all the bound can be calculate within 4 register
 	long frontend_bound;
 	long bad_speculation;
 	long retiring;
 	long bankend_bound;
 
-	//level 2 bound
+	//level 2 bound, all the bound can be calculate within 4 register
 	long fetch_latency_bound;
 	long fetch_bandwidth_bound;
 	long micro_sequencer;
 	long base;
+
+	//level 3 bound, all the bound can be calculate within 4 register
+	long l1_bound;
+	long l2_bound;
 
 	printk("Load Top Down demo.\n");
 	printk("Begin using top-down event to analyze demo program.\n");
@@ -140,6 +156,30 @@ static int top_down_demo_init(void)
 	read_pe_counter(3, &ms_uops_end);
 	ms_uops = counter_delta(ms_uops_begin, ms_uops_end);
 
+	//memstall_anyload
+	set_pe_monitor(0, IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_MEM_ANY);
+	read_pe_counter(0, &memstall_anyload_begin);
+	program_logic();
+	unset_pe_monitor(0);
+	read_pe_counter(0, &memstall_anyload_end);
+	memstall_anyload = counter_delta(memstall_anyload_begin, memstall_anyload_end);
+
+	//memstall_l1miss
+	set_pe_monitor(0, IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_L1D_MISS);
+	read_pe_counter(0, &memstall_l1miss_begin);
+	program_logic();
+	unset_pe_monitor(0);
+	read_pe_counter(0, &memstall_l1miss_end);
+	memstall_l1miss = counter_delta(memstall_l1miss_begin, memstall_l1miss_end);
+
+	//get memstall_l2miss
+	set_pe_monitor(0, IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_L2_MISS);
+	read_pe_counter(0, &memstall_l2miss_begin);
+	program_logic();
+	unset_pe_monitor(0);
+	read_pe_counter(0, &memstall_l2miss_end);
+	memstall_l2miss = counter_delta(memstall_l2miss_begin, memstall_l2miss_end);
+
 	//calculate category level 1
 	frontend_bound = tmam_frontend_bound(fetch_bubbles,clock);
 	bad_speculation = tmam_bad_speculation(slots_issued,slots_retired,recovery_bubbles,clock);
@@ -152,11 +192,21 @@ static int top_down_demo_init(void)
 	micro_sequencer = tmam_micro_sequencer(ms_uops,clock);
 	base = tmam_base(retiring,micro_sequencer);
 
-	//display level 1 result in dmesg
-	printk("frontend_bound=%ld,bad_speculation=%ld,retiring=%ld,bankend_bound=%ld\n",frontend_bound,bad_speculation,retiring,bankend_bound);
+	//calculate category level 3
+	l1_bound = tmam_l1_bound(memstall_anyload,memstall_l1miss,clock);
+	l2_bound = tmam_l2_bound(memstall_l1miss,memstall_l2miss,clock);
 
-	//display level 2 result in dmesg
-	printk("fetch_latency_bound=%ld,fetch_bandwidth_bound=%ld,micro_sequencer=%ld,base=%ld\n",fetch_latency_bound,fetch_bandwidth_bound,micro_sequencer,base);
+	printk("top-down result:\n");
+
+	//display level 1 result in kernel log
+	printk("level 1 bound: frontend_bound=%ld,bad_speculation=%ld,retiring=%ld,bankend_bound=%ld\n",frontend_bound,bad_speculation,retiring,bankend_bound);
+
+	//display level 2 result in kernel log
+	printk("level 2 bound: fetch_latency_bound=%ld,fetch_bandwidth_bound=%ld,micro_sequencer=%ld,base=%ld\n",fetch_latency_bound,fetch_bandwidth_bound,micro_sequencer,base);
+
+	//display level 3 result in kernel log
+	printk("level 3 bound: l1_bound=%ld,l2_bound=%ld\n",l1_bound,l2_bound);
+
 	return 0;
 }
 
