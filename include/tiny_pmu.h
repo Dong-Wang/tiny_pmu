@@ -74,7 +74,7 @@
 #define IA32_PERFEVT_RS_EVENTS_EMPTY_CYCLES                 0x0043015e  /* cycles when RS is empty */
 #define IA32_PERFEVT_UOPS_EXECUTED_CYCLES_GE_1_UOP_EXEC     0x014301b1  /* cycles at least 1 uops execute */
 #define IA32_PERFEVT_UOPS_EXECUTED_CYCLES_GE_2_UOP_EXEC     0x024301b1  /* cycles at least 2 uops execute */
-#define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_MEM_ANY          0x064306a3  /* stall due to memory load */
+#define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_MEM_ANY          0x064314a3  /* stall due to memory load */
 #define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_L1D_MISS         0x0c430ca3  /* stall due to memory load when L1 miss */
 #define IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_L2_MISS          0x054305a3  /* stall due to memory load when L2 miss */
 #define IA32_PERFEVT_MEM_LOAD_UOPS_RETIRED_LLC_HIT          0x004304d1  /* retired uops for LLC hit */
@@ -130,12 +130,84 @@
  */
 #define TMAM_MATRIC_THREADS 1
 
+/*
+ * limit the bound value to [0,1]
+ */
+#define limit(value) ((value>=0&&value<=TMAM_MATRIC_RESOLUTION)?value:(value<0)?0:TMAM_MATRIC_RESOLUTION)
+
 /* CPI */
 #define tmam_cpi(CPU_CLK_UNHALTED_THREAD, INST_RETIRED_ANY) \
-	((CPU_CLK_UNHALTED_THREAD)*TMAM_MATRIC_RESOLUTION / (INST_RETIRED_ANY))
+	limit(((CPU_CLK_UNHALTED_THREAD)*TMAM_MATRIC_RESOLUTION / (INST_RETIRED_ANY)))
 
 /*
- * formula for memory bound and core bound
+ * formula for frontend_bound
+ * a:IA32_PERFEVT_IDQ_UOPS_LE3_NOT_DELIVERED_CORE
+ * b:IA32_PERFEVT_CPU_CLK_UNHALTED_THREAD
+ */
+#define tmam_frontend_bound(a,b) \
+	limit((TMAM_MATRIC_RESOLUTION * TMAM_MATRIC_THREADS * a / b / 4))
+
+/*
+ * formula for bad_speculation
+ * a:UOPS_ISSUED.ANY
+ * b:UOPS_RETIRED.RETIRE_SLOTS
+ * c:INT_MISC.RECOVERY_CYCLES_ANY
+ * d:CPU_CLK_UNHALTED.THREAD
+ */
+#define tmam_bad_speculation(a,b,c,d) \
+	limit((TMAM_MATRIC_RESOLUTION * (a-b + (4 * c)/TMAM_MATRIC_THREADS) / (d * 4/ TMAM_MATRIC_THREADS)))
+
+/*
+ * formula for retiring
+ * a:UOPS_RETIRED.RETIRE_SLOTS
+ * b:CPU_CLK_UNHALTED.THREAD
+ */
+#define tmam_retiring(a,b) \
+	limit((TMAM_MATRIC_RESOLUTION * a / (b * 4 / TMAM_MATRIC_THREADS)))
+
+/*
+ * formula for backend_bound
+ * a:frondend_bound
+ * b:bad_speculation
+ * c:retiring
+ */
+#define tmam_backend_bound(a,b,c) \
+	limit((TMAM_MATRIC_RESOLUTION-(a + b + c)))
+
+/*
+ * formula for retiring
+ * a:UOPS_RETIRED.RETIRE_SLOTS
+ * b:IDQ_UOPS_NOT_DELIVERED.CORE
+ */
+#define tmam_fetch_latency_bound(a,b) \
+	limit((TMAM_MATRIC_RESOLUTION * a / b / 4))
+
+/*
+ * formula for fetch_bandwidth_bound
+ * a:frondend_bound
+ * b:tmam_fetch_latency_bound
+ */
+#define tmam_fetch_bandwidth_bound(a,b) \
+	limit((a - b))
+
+/*
+ * formula for micro_sequencer
+ * a:IDQ.MS_CYCLES
+ * b:CPU_CLK_UNHALTED.THREAD
+ */
+#define tmam_micro_sequencer(a,b) \
+	limit((TMAM_MATRIC_RESOLUTION * a / b / 4))
+
+/*
+ * formula for micro_sequencer
+ * a:retiring
+ * b:micro_sequencer
+ */
+#define tmam_base(a,b) \
+	limit((a - b))
+	
+/*
+ * formula for memory bound
  * a:IDQ_UOPS_NOT_DELIVERED.CORE
  * b:UOPS_ISSUED.ANY
  * c:INT_MISC.RECOVERY_CYCLES_ANY
@@ -150,10 +222,10 @@
  * q:INST_RETIRED.ANY
  */
 #define tmam_memory_bound(a,b,c,d,e,f,g,j,k,m,p,q) \
-	(TMAM_MATRIC_RESOLUTION - TMAM_MATRIC_RESOLUTION*((b-e+4*(c/TMAM_MATRIC_THREADS)+a+e)/(4*d/TMAM_MATRIC_THREADS)))*(f+g)/(m+j+(((TMAM_MATRIC_RESOLUTION*q/p)>18*TMAM_MATRIC_RESOLUTION/10)?k:0)+f+g)
+	limit((TMAM_MATRIC_RESOLUTION - TMAM_MATRIC_RESOLUTION*((b-e+4*(c/TMAM_MATRIC_THREADS)+a+e)/(4*d/TMAM_MATRIC_THREADS)))*(f+g)/(m+j+(((TMAM_MATRIC_RESOLUTION*q/p)>18*TMAM_MATRIC_RESOLUTION/10)?k:0)+f+g))
 
 /*
- * formula for memory bound and core bound
+ * formula for core bound
  * a:IDQ_UOPS_NOT_DELIVERED.CORE
  * b:UOPS_ISSUED.ANY
  * c:INT_MISC.RECOVERY_CYCLES_ANY
@@ -168,7 +240,24 @@
  * q:INST_RETIRED.ANY
  */
 #define tmam_core_bound(a,b,c,d,e,f,g,j,k,m,p,q) \
-	(TMAM_MATRIC_RESOLUTION-(TMAM_MATRIC_RESOLUTION*(b-e+4*(c/TMAM_MATRIC_THREADS)+a+e)/(4*d/TMAM_MATRIC_THREADS)))*(TMAM_MATRIC_RESOLUTION-(TMAM_MATRIC_RESOLUTION*(f+g)/(m+j+(((TMAM_MATRIC_RESOLUTION*q/p)>18*TMAM_MATRIC_RESOLUTION/10)?k:0)+f+g)))/TMAM_MATRIC_RESOLUTION
+	limit((TMAM_MATRIC_RESOLUTION-(TMAM_MATRIC_RESOLUTION*(b-e+4*(c/TMAM_MATRIC_THREADS)+a+e)/(4*d/TMAM_MATRIC_THREADS)))*(TMAM_MATRIC_RESOLUTION-(TMAM_MATRIC_RESOLUTION*(f+g)/(m+j+(((TMAM_MATRIC_RESOLUTION*q/p)>18*TMAM_MATRIC_RESOLUTION/10)?k:0)+f+g)))/TMAM_MATRIC_RESOLUTION)
 
+/*
+ * formula for l1_bound
+ * a:CYCLE_ACTIVITY.STALLS_MEM_ANY
+ * b:CYCLE_ACTIVITY.STALLS_L1D_MISS
+ * c:CPU_CLK_UNHALTED.THREAD
+ */
+#define tmam_l1_bound(a,b,c) \
+	limit(TMAM_MATRIC_RESOLUTION * (a - b) / c)
+
+/*
+ * formula for l2_bound
+ * a:CYCLE_ACTIVITY.STALLS_L1D_MISS
+ * b:CYCLE_ACTIVITY.STALLS_L2_MISS
+ * c:CPU_CLK_UNHALTED.THREAD
+ */
+#define tmam_l2_bound(a,b,c) \
+	limit(TMAM_MATRIC_RESOLUTION * (a - b) / c)
 
 #endif

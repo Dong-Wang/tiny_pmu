@@ -43,48 +43,61 @@ static void program_logic(void){
 static int top_down_demo_init(void)
 {
 	//directly get from PMU register
-	u64 clock;
+	long clock;
 	u64 clock_begin;
 	u64 clock_end;
 
-	u64 slots_issued;
+	long slots_issued;
 	u64 slots_issued_begin;
 	u64 slots_issued_end;
 
-	u64 slots_retired;
+	long slots_retired;
 	u64 slots_retired_begin;
 	u64 slots_retired_end;
 
-	u64 fetch_bubbles;
+	long fetch_bubbles;
 	u64 fetch_bubbles_begin;
 	u64 fetch_bubbles_end;
 
-	u64 recovery_bubbles;
+	long recovery_bubbles;
 	u64 recovery_bubbles_begin;
 	u64 recovery_bubbles_end;
 
-	u64 fetch_bubbles_MIW;
+	long fetch_bubbles_MIW;
 	u64 fetch_bubbles_MIW_begin;
 	u64 fetch_bubbles_MIW_end;
 
-	u64 ms_uops;
+	long ms_uops;
 	u64 ms_uops_begin;
 	u64 ms_uops_end;
 
-	//base event, which not directly get from pmu
-	u64 total_slots;
+	u64 memstall_anyload;
+	u64 memstall_anyload_begin;
+	u64 memstall_anyload_end;
 
-	//level 1 bound
-	u64 frontend_bound;
-	u64 bad_speculation;
-	u64 retiring;
-	u64 bankend_bound;
+	u64 memstall_l1miss;
+	u64 memstall_l1miss_begin;
+	u64 memstall_l1miss_end;
 
-	//level 2 bound
-	u64 fetch_latency_bound;
-	u64 fetch_bandwidth_bound;
-	u64 micro_sequencer;
-	u64 base;
+	u64 memstall_l2miss;
+	u64 memstall_l2miss_begin;
+	u64 memstall_l2miss_end;
+
+	//level 1 bound, all the bound can be calculate within 4 register
+	long frontend_bound;
+	long bad_speculation;
+	long retiring;
+	long bankend_bound;
+
+	//level 2 bound, all the bound can be calculate within 4 register
+	long fetch_latency_bound;
+	long fetch_bandwidth_bound;
+	long micro_sequencer;
+	long base;
+
+	//level 3 bound, all the bound can be calculate within 4 register
+	long l1_bound;
+	long l2_bound;
 
 	printk("Load Top Down demo.\n");
 	printk("Begin using top-down event to analyze demo program.\n");
@@ -126,7 +139,6 @@ static int top_down_demo_init(void)
 	unset_pe_monitor(1);
 	read_pe_counter(1, &recovery_bubbles_end);
 	recovery_bubbles = counter_delta(recovery_bubbles_begin,recovery_bubbles_end);
-	total_slots = clock * 4;
 
 	//get fetch_bubbles_MIW
 	set_pe_monitor(2, IA32_PERFEVT_IDQ_UOPS_0_NOT_DELIVERED_CORE);
@@ -144,23 +156,57 @@ static int top_down_demo_init(void)
 	read_pe_counter(3, &ms_uops_end);
 	ms_uops = counter_delta(ms_uops_begin, ms_uops_end);
 
+	//memstall_anyload
+	set_pe_monitor(0, IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_MEM_ANY);
+	read_pe_counter(0, &memstall_anyload_begin);
+	program_logic();
+	unset_pe_monitor(0);
+	read_pe_counter(0, &memstall_anyload_end);
+	memstall_anyload = counter_delta(memstall_anyload_begin, memstall_anyload_end);
+
+	//memstall_l1miss
+	set_pe_monitor(0, IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_L1D_MISS);
+	read_pe_counter(0, &memstall_l1miss_begin);
+	program_logic();
+	unset_pe_monitor(0);
+	read_pe_counter(0, &memstall_l1miss_end);
+	memstall_l1miss = counter_delta(memstall_l1miss_begin, memstall_l1miss_end);
+
+	//get memstall_l2miss
+	set_pe_monitor(0, IA32_PERFEVT_CYCLE_ACTIVITY_STALLS_L2_MISS);
+	read_pe_counter(0, &memstall_l2miss_begin);
+	program_logic();
+	unset_pe_monitor(0);
+	read_pe_counter(0, &memstall_l2miss_end);
+	memstall_l2miss = counter_delta(memstall_l2miss_begin, memstall_l2miss_end);
+
 	//calculate category level 1
-	frontend_bound=	TMAM_MATRIC_RESOLUTION * TMAM_MATRIC_THREADS * fetch_bubbles / total_slots;
-	bad_speculation = TMAM_MATRIC_RESOLUTION * (slots_issued-slots_retired + (4 * recovery_bubbles)/TMAM_MATRIC_THREADS) / (total_slots / TMAM_MATRIC_THREADS);
-	retiring = TMAM_MATRIC_RESOLUTION * slots_retired / (total_slots / TMAM_MATRIC_THREADS);
-	bankend_bound = TMAM_MATRIC_RESOLUTION-(frontend_bound + bad_speculation + retiring);
+	frontend_bound = tmam_frontend_bound(fetch_bubbles,clock);
+	bad_speculation = tmam_bad_speculation(slots_issued,slots_retired,recovery_bubbles,clock);
+	retiring = tmam_retiring(slots_retired,clock);
+	bankend_bound = tmam_backend_bound(frontend_bound,bad_speculation,retiring);
 
 	//calculate category level 2
-	fetch_latency_bound = TMAM_MATRIC_RESOLUTION * fetch_bubbles_MIW / total_slots;
-	fetch_bandwidth_bound = frontend_bound - fetch_latency_bound;
-	micro_sequencer = TMAM_MATRIC_RESOLUTION * ms_uops / total_slots;
-	base = retiring - micro_sequencer;
+	fetch_latency_bound = tmam_fetch_latency_bound(fetch_bubbles_MIW,clock);
+	fetch_bandwidth_bound = tmam_fetch_bandwidth_bound(frontend_bound,fetch_latency_bound);
+	micro_sequencer = tmam_micro_sequencer(ms_uops,clock);
+	base = tmam_base(retiring,micro_sequencer);
 
-	//display level 1 result in dmesg
-	printk("frontend_bound=%lld,bad_speculation=%lld,retiring=%lld,bankend_bound=%lld\n",frontend_bound,bad_speculation,retiring,bankend_bound);
+	//calculate category level 3
+	l1_bound = tmam_l1_bound(memstall_anyload,memstall_l1miss,clock);
+	l2_bound = tmam_l2_bound(memstall_l1miss,memstall_l2miss,clock);
 
-	//display level 2 result in dmesg
-	printk("fetch_latency_bound=%lld,fetch_bandwidth_bound=%lld,micro_sequencer=%lld,base=%lld\n",fetch_latency_bound,fetch_bandwidth_bound,micro_sequencer,base);
+	printk("top-down result:\n");
+
+	//display level 1 result in kernel log
+	printk("level 1 bound: frontend_bound=%ld,bad_speculation=%ld,retiring=%ld,bankend_bound=%ld\n",frontend_bound,bad_speculation,retiring,bankend_bound);
+
+	//display level 2 result in kernel log
+	printk("level 2 bound: fetch_latency_bound=%ld,fetch_bandwidth_bound=%ld,micro_sequencer=%ld,base=%ld\n",fetch_latency_bound,fetch_bandwidth_bound,micro_sequencer,base);
+
+	//display level 3 result in kernel log
+	printk("level 3 bound: l1_bound=%ld,l2_bound=%ld\n",l1_bound,l2_bound);
+
 	return 0;
 }
 
